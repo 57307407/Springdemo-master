@@ -10,4 +10,4 @@
 
 ### 三、项目运行
 - 输入 ：cd workroom/Springdemo-master/jar进入jar包目录
-- 启动后端项目命令：sudo java -jar ruoyi-admin.jar
+- 启动后端项目命令：sudo java -jar platform-springboot-api.jar
