@@ -21,6 +21,17 @@ public class Controller {
         String cmd = "sh /root/shell/" + name;
         return JsonData.buildSuccess(ShellUtils.runShell(cmd));
     }
+
+    /**
+     * 根据脚本名测试脚本
+     * @param name 需要运行的脚本名称
+     * @return
+     */
+    @GetMapping("/demo2")
+    public JsonData demo2(@RequestParam String name){
+        String cmd = name;
+        return JsonData.buildSuccess(ShellUtils.runCmd(cmd));
+    }
     /**
      * sparkinstall安装脚本
      * @return

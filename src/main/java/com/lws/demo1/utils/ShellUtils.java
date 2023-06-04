@@ -21,7 +21,7 @@ public class ShellUtils {
     private static final int DEFAULT_WAIT_TIME = 20 * 60 * 1000;
 
     /**
-     *
+     *运行脚本文件方法
      * @param cmd Linux
      * @return
      */
@@ -29,7 +29,6 @@ public class ShellUtils {
         String[] command = new String[]{"/bin/sh", "-c", cmd};
         try {
             Process process = Runtime.getRuntime().exec(command);
-//            ShellResult result = getProcessResult(process, DEFAULT_WAIT_TIME);
             LOGGER.info("Command [{}] executed successfully.", cmd);
             BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
             BufferedReader wr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -45,7 +44,6 @@ public class ShellUtils {
             wr.close();
             Thread.sleep(THREAD_SLEEP_TIME);
             System.out.println(process.exitValue());
-//            return result.getDescription();
             return list;
         } catch (IOException e) {
             e.printStackTrace();
@@ -53,67 +51,37 @@ public class ShellUtils {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     /**
-     * 获取命令执行结果
-     * @param process 子进程
-     * @param waitTime 指定超时时间
-     * @return 命令执行输出结果
+     *运行命令方法
+     * @param cmd Linux
+     * @return
      */
-    public static ShellResult getProcessResult(Process process, long waitTime) {
-        ShellResult cmdResult = new ShellResult();
-        boolean isTimeout = false;
-        long loopNumber = waitTime / THREAD_SLEEP_TIME;
-        long realLoopNumber = 0;
-        int exitValue = -1;
-
-        StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream());
-        StreamGobbler outputGobbler = new StreamGobbler(process.getInputStream());
-
-        errorGobbler.start();
-        outputGobbler.start();
-
+    public static List runCmd(String cmd) {
         try {
-            while (true) {
-                try {
-
-                    Thread.sleep(THREAD_SLEEP_TIME);
-                    exitValue = process.exitValue();
-                    break;
-                } catch (InterruptedException e) {
-                    realLoopNumber++;
-                    if (realLoopNumber >= loopNumber) {
-                        isTimeout = true;
-                        break;
-                    }
-                }
+            Process process = Runtime.getRuntime().exec(cmd);
+            LOGGER.info("Command [{}] executed successfully.", cmd);
+            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader wr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            String result;
+            List list = new ArrayList<>();
+            while ((result = br.readLine()) != null) {
+                list.add(result);
             }
-
-            errorGobbler.join();
-            outputGobbler.join();
-
-            if (isTimeout) {
-                cmdResult.setErrorCode(ShellResult.TIMEOUT);
-                return cmdResult;
+            while ((result = wr.readLine()) != null) {
+                list.add(result);
             }
-
-            cmdResult.setErrorCode(exitValue);
-            if (exitValue != ShellResult.SUCCESS) {
-                cmdResult.setDescription(errorGobbler.getOutput());
-            } else {
-                cmdResult.setDescription(outputGobbler.getOutput());
-            }
+            br.close();
+            wr.close();
+            Thread.sleep(THREAD_SLEEP_TIME);
+            System.out.println(process.exitValue());
+            return list;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         } catch (InterruptedException e) {
-            LOGGER.error("Get shell result error.");
-            cmdResult.setErrorCode(ShellResult.ERROR);
-        } finally {
-            CommonUtils.closeStream(process.getErrorStream());
-            CommonUtils.closeStream(process.getInputStream());
-            CommonUtils.closeStream(process.getOutputStream());
+            throw new RuntimeException(e);
         }
-
-        return cmdResult;
     }
 }
